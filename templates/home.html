@@ -8,10 +8,15 @@
     <h1>
         headlines
     </h1>
-    <b>
-        tiitle
-    </b><br/>
-    <i>published</i><br />
-    <p>summery</p>
+    <form>
+        <input type="text" name="publication" placeholder="search" />
+        <input type="submit" value="submit"/>
+    </form>
+
+    {% for article in articles %}
+    <b><a href ="{{article.link}}">{{article.title}}</a></b><br />
+    <hr />
+    {% endfor %}
+
     </body>
 </html>
