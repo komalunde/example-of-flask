@@ -1,3 +1,5 @@
+
+import datetime
 import json
 import urllib2
 import urllib
@@ -5,7 +7,7 @@ import feedparser
 from flask import Flask
 from flask import render_template
 from flask import request
-
+from flask import make_response
 app = Flask(__name__)
 
 RSS_FEEDS = {'bbc':'http://feeds.bbci.co.uk/news/rss.xml', 'cnn': 'http://rss.ccn.com/rss/edition.rss',
@@ -26,6 +28,7 @@ DEFAULTS = {
 def home():
     publication = request.args.get('publication')
     if not publication:
+        publication=request.cookies.get("publicationss")
         publication = DEFAULTS['publication']
     articles = get_news(publication)
     city = request.args.get('city')
@@ -43,9 +46,17 @@ def home():
 
     rate,currencies = get_rate(currency_from,currency_to)
 
-    return render_template("home.html", articles=articles,
+    response = make_response (render_template("home.html", articles=articles,
     weather=weather,currency_from=currency_from,
-    currency_to=currency_to, rate = rate,currencies = sorted(currencies))
+    currency_to=currency_to, rate = rate,currencies = sorted(currencies)))
+
+    expires = datetime.datetime.now() + datetime.timedelta(days=365)
+    response.set_cookie("publication",publication,expires=expires)
+    response.set_cookie("city",city,expires=expires)
+    response.set_cookie("currency_from",currency_from,expires=expires)
+    response.set_cookie("currency_to",currency_to,expires=expires)
+    return response
+
 
 def get_rate(frm,to):
     all_currency = urllib2.urlopen(CURRENCY_URL).read()
@@ -54,7 +65,6 @@ def get_rate(frm,to):
     frm_rate = parsed.get(frm.upper())
     to_rate = parsed.get(to.upper())
     return (to_rate/frm_rate,parsed.keys())
-
 
 
 def get_news(query):
